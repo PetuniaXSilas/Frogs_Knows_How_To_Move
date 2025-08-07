@@ -21,6 +21,7 @@ scoreDiv.style.position = 'absolute';
 scoreDiv.style.top = '10px';
 scoreDiv.style.left = '10px';
 scoreDiv.style.color = 'white';
+scoreDiv.style.zIndex = '100';
 document.body.appendChild(scoreDiv);
 
 const livesDiv = document.createElement('div');
@@ -30,7 +31,39 @@ livesDiv.style.position = 'absolute';
 livesDiv.style.top = '10px';
 livesDiv.style.right = '10px';
 livesDiv.style.color = 'white';
+livesDiv.style.zIndex = '100';
 document.body.appendChild(livesDiv);
+
+const gameOverDiv = document.createElement('div');
+gameOverDiv.id = 'gameOverScreen';
+gameOverDiv.textContent = 'Game Over! No lives left.';
+gameOverDiv.style.position = 'absolute';
+gameOverDiv.style.top = '50%';
+gameOverDiv.style.left = '50%';
+gameOverDiv.style.transform = 'translate(-50%, -50%)';
+gameOverDiv.style.color = 'white';
+gameOverDiv.style.fontFamily = '"OCR-A", monospace';
+gameOverDiv.style.fontSize = '32px';
+gameOverDiv.style.textAlign = 'center';
+gameOverDiv.style.background = 'black';
+gameOverDiv.style.padding = '20px';
+gameOverDiv.style.border = '2px solid white';
+gameOverDiv.style.boxShadow = '0 0 10px white';
+gameOverDiv.style.display = 'none';
+gameOverDiv.style.zIndex = '200';
+document.head.appendChild(document.createElement('style')).textContent = `
+@keyframes glitch {
+    0% { transform: translate(-50%, -50%); }
+    25% { transform: translate(-50%, -50%) translateX(5px); }
+    50% { transform: translate(-50%, -50%) translateY(5px); }
+    75% { transform: translate(-50%, -50%) translateX(-5px); }
+    100% { transform: translate(-50%, -50%); }
+}
+@keyframes floatUp {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-100px); opacity: 0; }
+}`;
+document.body.appendChild(gameOverDiv);
 
 goal.style.top = '50px';
 goal.style.left = '180px';
@@ -62,6 +95,8 @@ function keepFrogInBounds() {
 }
 
 function checkCollision() {
+    if (isInvulnerable) return;
+
     const frogRect = { x: frogX, y: frogY, width: 40, height: 40 };
     const obs1Rect = { x: obstacle1X, y: 150, width: 40, height: 40 };
     const obs2Rect = { x: obstacle2X, y: 250, width: 40, height: 40 };
@@ -74,8 +109,35 @@ function checkCollision() {
     }
 
     if (isColliding(frogRect, obs1Rect) || isColliding(frogRect, obs2Rect)) {
-        gameOver = true;
-        alert('Game Over! You hit an obstacle.');
+        lives -= 1;
+        livesDiv.textContent = `Lives: ${lives}`;
+        frogX = 180;
+        frogY = 350;
+        isInvulnerable = true;
+        setTimeout(() => { isInvulnerable = false; }, 2000);
+
+        if (lives > 0) {
+            const messages = ["Don't Give Up!", "Keep Trying!"];
+            const message = messages[Math.floor(Math.random() * messages.length)];
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.textContent = message;
+            bubbleDiv.style.position = 'absolute';
+            bubbleDiv.style.left = `${frogX + 40}px`;
+            bubbleDiv.style.top = `${frogY - 20}px`;
+            bubbleDiv.style.color = 'white';
+            bubbleDiv.style.background = 'black';
+            bubbleDiv.style.padding = '10px';
+            bubbleDiv.style.border = '1px solid white';
+            bubbleDiv.style.fontFamily = '"OCR-A", monospace';
+            bubbleDiv.style.fontSize = '16px';
+            bubbleDiv.style.zIndex = '150';
+            bubbleDiv.style.animation = `floatUp ${3 + Math.random() * 2}s forwards`;
+            document.body.appendChild(bubbleDiv);
+            setTimeout(() => { bubbleDiv.remove(); }, (3 + Math.random() * 2) * 1000);
+        } else {
+            gameOver = true;
+            gameOverDiv.style.display = 'block';
+        }
     }
 }
 
@@ -87,8 +149,14 @@ function checkGoal() {
         frogRect.x + frogRect.width > goalRect.x &&
         frogRect.y < goalRect.y + goalRect.height &&
         frogRect.y + frogRect.height > goalRect.y) {
-        gameOver = true;
-        alert('You Win! You reached the goal!');
+        score += 100;
+        level += 1;
+        gameSpeed += 0.5;
+        scoreDiv.textContent = `Score: ${score} | Level: ${level}`;
+        frogX = 180;
+        frogY = 350;
+        obstacle1X = 0;
+        obstacle2X = 400;
     }
 }
 
