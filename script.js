@@ -14,6 +14,7 @@ let gameSpeed = 2;
 let level = 1;
 let isInvulnerable = false;
 
+// Create score and level display
 const scoreDiv = document.createElement('div');
 scoreDiv.id = 'score';
 scoreDiv.textContent = `Score: ${score} | Level: ${level}`;
@@ -24,6 +25,7 @@ scoreDiv.style.color = 'white';
 scoreDiv.style.zIndex = '100';
 document.body.appendChild(scoreDiv);
 
+// Create lives display
 const livesDiv = document.createElement('div');
 livesDiv.id = 'lives';
 livesDiv.textContent = `Lives: ${lives}`;
@@ -34,6 +36,7 @@ livesDiv.style.color = 'white';
 livesDiv.style.zIndex = '100';
 document.body.appendChild(livesDiv);
 
+// Create game over screen
 const gameOverDiv = document.createElement('div');
 gameOverDiv.id = 'gameOverScreen';
 gameOverDiv.textContent = 'Game Over! No lives left.';
@@ -51,6 +54,7 @@ gameOverDiv.style.border = '2px solid white';
 gameOverDiv.style.boxShadow = '0 0 10px white';
 gameOverDiv.style.display = 'none';
 gameOverDiv.style.zIndex = '200';
+gameOverDiv.style.animation = 'glitch 0.5s infinite, sway 2s ease-in-out infinite';
 document.head.appendChild(document.createElement('style')).textContent = `
 @keyframes glitch {
     0% { transform: translate(-50%, -50%); }
@@ -62,6 +66,11 @@ document.head.appendChild(document.createElement('style')).textContent = `
 @keyframes floatUp {
     0% { transform: translateY(0); opacity: 1; }
     100% { transform: translateY(-100px); opacity: 0; }
+}
+@keyframes sway {
+    0% { transform: translate(-50%, -50%) rotate(-5deg); }
+    50% { transform: translate(-50%, -50%) rotate(5deg); }
+    100% { transform: translate(-50%, -50%) rotate(-5deg); }
 }`;
 document.body.appendChild(gameOverDiv);
 
@@ -70,6 +79,7 @@ goal.style.left = '180px';
 obstacle1.style.top = '150px';
 obstacle2.style.top = '250px';
 
+// Handle arrow key inputs for frog movement
 document.addEventListener('keydown', (event) => {
     if (gameOver) return;
 
@@ -89,11 +99,13 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
+// Keep frog within 400x400 game area
 function keepFrogInBounds() {
     frogX = Math.max(0, Math.min(360, frogX));
     frogY = Math.max(0, Math.min(360, frogY));
 }
 
+// Check for collisions with obstacles
 function checkCollision() {
     if (isInvulnerable) return;
 
@@ -109,6 +121,7 @@ function checkCollision() {
     }
 
     if (isColliding(frogRect, obs1Rect) || isColliding(frogRect, obs2Rect)) {
+        // Lives tracking: Decrease lives and update display
         lives -= 1;
         livesDiv.textContent = `Lives: ${lives}`;
         frogX = 180;
@@ -117,6 +130,7 @@ function checkCollision() {
         setTimeout(() => { isInvulnerable = false; }, 2000);
 
         if (lives > 0) {
+            // Show encouraging message for first two lives lost
             const messages = ["Don't Give Up!", "Keep Trying!"];
             const message = messages[Math.floor(Math.random() * messages.length)];
             const bubbleDiv = document.createElement('div');
@@ -135,12 +149,14 @@ function checkCollision() {
             document.body.appendChild(bubbleDiv);
             setTimeout(() => { bubbleDiv.remove(); }, (3 + Math.random() * 2) * 1000);
         } else {
+            // Show game over screen when lives reach 0
             gameOver = true;
             gameOverDiv.style.display = 'block';
         }
     }
 }
 
+// Check if frog reaches the goal
 function checkGoal() {
     const frogRect = { x: frogX, y: frogY, width: 40, height: 40 };
     const goalRect = { x: 180, y: 50, width: 40, height: 40 };
@@ -149,8 +165,11 @@ function checkGoal() {
         frogRect.x + frogRect.width > goalRect.x &&
         frogRect.y < goalRect.y + goalRect.height &&
         frogRect.y + frogRect.height > goalRect.y) {
+        // Score keeping: Increase score by 100
         score += 100;
+        // Level tracking: Increment level
         level += 1;
+        // Increase obstacle speed
         gameSpeed += 0.5;
         scoreDiv.textContent = `Score: ${score} | Level: ${level}`;
         frogX = 180;
@@ -160,6 +179,7 @@ function checkGoal() {
     }
 }
 
+// Update frog's position on screen
 function updateFrogPosition() {
     frog.style.left = `${frogX}px`;
     frog.style.top = `${frogY}px`;
@@ -170,6 +190,7 @@ function updateFrogPosition() {
     }
 }
 
+// Update obstacle positions
 function updateObstacles() {
     obstacle1X += gameSpeed;
     obstacle2X -= gameSpeed;
@@ -181,6 +202,7 @@ function updateObstacles() {
     obstacle2.style.left = `${obstacle2X}px`;
 }
 
+// Main game loop
 function gameLoop() {
     if (!gameOver) {
         keepFrogInBounds();
